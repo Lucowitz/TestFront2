@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\client",
+    "\\client\\src",
+    "\\client\\src\\components",
+    "\\client\\src\\components\\layout",
+    "\\client\\src\\components\\tokens",
+    "\\client\\src\\data",
+    "\\client\\src\\lib\\i18n",
+    "\\client\\src\\pages",
+    "\\server"
+  ],
+  "SelectedNode": "\\client\\src\\lib",
+  "PreviewInSolutionExplorer": false
+}
