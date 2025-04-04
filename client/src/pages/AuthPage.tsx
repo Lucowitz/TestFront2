@@ -50,9 +50,19 @@ const AuthPage = () => {
 
 const LoginForm = ({ isBusiness }) => (
   <form className="space-y-4">
-    <Input label={isBusiness ? "P.IVA" : "Codice Fiscale"} type="text" placeholder={isBusiness ? "P.IVA" : "Codice Fiscale"} required />
-    <Input label="Password" type="password" required />
-    <Input label="Codice TOTP" type="text" placeholder="Inserisci codice a 6 cifre" required />
+    {isBusiness ? (
+      <>  
+      <Input label="P.IVA"  type="text" placeholder= "P.IVA" required />
+      <Input label="Password" type="password" placeholder= "Password" required />
+      <Input label="Codice TOTP" type="text" placeholder="Inserisci codice a 6 cifre" required />
+      </>
+    ) : (
+      <>  
+      <Input label="Codice fiscale"  type="text" placeholder= "Codice fiscale" required />
+      <Input label="Password" type="password" placeholder= "Password" required />
+      <Input label="Codice TOTP" type="text" placeholder="Inserisci codice a 6 cifre" required />
+      </>
+    )}
     <Button className="w-full">Accedi</Button>
   </form>
 );
@@ -69,9 +79,9 @@ const RegisterForm = ({ isBusiness }) => (
       <>
         <Input label="Nome" type="text" placeholder="Nome" required />
         <Input label="Cognome" type="text" placeholder="Cognome" required />
-        <Input label="Indirizzo" type="text" required />
-        <Input label="Codice Fiscale" type="text" required />
-        <Input label="Numero di Telefono" type="text" required />
+        <Input label="Indirizzo" type="text" placeholder="Indirizzo" required />
+        <Input label="Codice Fiscale" type="text" placeholder="Codice Fiscale" required />
+        <Input label="Numero di Telefono" type="text" placeholder="Nome di Telefono" required />
       </>
     )}
     <Input label="Password" type="password" placeholder="Password" required />
