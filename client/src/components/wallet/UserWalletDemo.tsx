@@ -1,213 +1,351 @@
+"use client"
 
-import { useLanguage } from "@/hooks/useLanguage";
-import { useDemo } from "@/context/DemoContext";
-import { Helmet } from "react-helmet";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react"
+import type { FormEvent } from "react"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useToast } from "@/hooks/use-toast"
+import { ArrowUpRight, ArrowDownLeft, RefreshCw, DollarSign } from "lucide-react"
 
-export default function UserWalletDemo() {
-  const { t } = useLanguage();
-  const { demoUserWallet, demoCompanyToken } = useDemo();
-  const [showSendDialog, setShowSendDialog] = useState(false);
-  const [sendAmount, setSendAmount] = useState("");
-  const [recipientAddress, setRecipientAddress] = useState("");
-  const [selectedToken, setSelectedToken] = useState<"SOL" | string>("SOL");
+interface Transaction {
+  id: string
+  fromWalletId: string
+  toWalletId: string
+  amount: string
+  tokenId: string
+  timestamp: string
+  status: string
+}
 
-  const SOLANA_PRICE_USD = 102.45;
-  const solanaValueUSD = demoUserWallet.solanaBalance * SOLANA_PRICE_USD;
+interface UserWalletProps {
+  userId: string
+  userName: string
+}
 
-  type PurchasedToken = { 
-    tokenId: string; 
-    amount: number; 
-    purchaseValue: number; 
-    currentValue: number; 
-  };
+export default function UserWalletDemo({ userId, userName }: UserWalletProps) {
+  const { toast } = useToast()
+  const [balance, setBalance] = useState("0.00")
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [recipientId, setRecipientId] = useState("")
+  const [amount, setAmount] = useState("")
 
-  const totalTokenValueUSD = demoUserWallet.purchasedTokens.reduce(
-    (acc: number, token: PurchasedToken) => acc + token.currentValue,
-    0
-  );
-  const totalBalanceUSD = solanaValueUSD + totalTokenValueUSD;
+  useEffect(() => {
+    // In a real app, fetch wallet data from API
+    // For demo, we'll use mock data
+    const fetchWallet = async () => {
+      try {
+        setIsLoading(true)
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 1000))
 
-  const handleSend = () => {
-    const amount = Number(sendAmount);
-    
-    if (selectedToken === "SOL") {
-      if (amount > 0 && amount <= demoUserWallet.solanaBalance) {
-        alert(`Sent ${amount} SOL to ${recipientAddress}`);
-        setShowSendDialog(false);
-        setSendAmount("");
-        setRecipientAddress("");
-        setSelectedToken("SOL");
-      } else {
-        alert("Invalid amount or insufficient SOL balance");
-      }
-    } else {
-      const token = demoUserWallet.purchasedTokens.find(t => t.tokenId === selectedToken);
-      if (token && amount > 0 && amount <= token.amount) {
-        alert(`Sent ${amount} ${demoCompanyToken?.symbol} to ${recipientAddress}`);
-        setShowSendDialog(false);
-        setSendAmount("");
-        setRecipientAddress("");
-        setSelectedToken("SOL");
-      } else {
-        alert("Invalid amount or insufficient token balance");
+        setBalance("125.50")
+        setTransactions([
+          {
+            id: "tx1",
+            fromWalletId: "other1",
+            toWalletId: userId,
+            amount: "50.00",
+            tokenId: "SOL",
+            timestamp: new Date(Date.now() - 86400000).toISOString(),
+            status: "completed",
+          },
+          {
+            id: "tx2",
+            fromWalletId: userId,
+            toWalletId: "other2",
+            amount: "25.00",
+            tokenId: "SOL",
+            timestamp: new Date(Date.now() - 172800000).toISOString(),
+            status: "completed",
+          },
+          {
+            id: "tx3",
+            fromWalletId: "other3",
+            toWalletId: userId,
+            amount: "100.00",
+            tokenId: "SOL",
+            timestamp: new Date(Date.now() - 259200000).toISOString(),
+            status: "completed",
+          },
+        ])
+      } catch (error) {
+        console.error("Error fetching wallet:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load wallet data",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
       }
     }
-  };
+
+    fetchWallet()
+  }, [userId, toast])
+
+  const handleSendTransaction = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    if (!recipientId || !amount) {
+      toast({
+        title: "Error",
+        description: "Please enter recipient ID and amount",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      // Simulate API call
+      setIsLoading(true)
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      // Update balance
+      const newBalance = (Number.parseFloat(balance) - Number.parseFloat(amount)).toFixed(2)
+      setBalance(newBalance)
+
+      // Add transaction to list
+      const newTransaction = {
+        id: `tx${Date.now()}`,
+        fromWalletId: userId,
+        toWalletId: recipientId,
+        amount,
+        tokenId: "SOL",
+        timestamp: new Date().toISOString(),
+        status: "completed",
+      }
+
+      setTransactions([newTransaction, ...transactions])
+
+      // Reset form
+      setRecipientId("")
+      setAmount("")
+
+      toast({
+        title: "Success",
+        description: `Sent ${amount} SOL to ${recipientId}`,
+        variant: "default",
+      })
+    } catch (error) {
+      console.error("Error sending transaction:", error)
+      toast({
+        title: "Error",
+        description: "Failed to send transaction",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString() + " " + date.toLocaleTimeString()
+  }
 
   return (
-    <>
-      <Helmet>
-        <title>Wallet Demo - Prime Genesis</title>
-        <meta name="description" content="Experience Prime Genesis wallet features in demo mode" />
-      </Helmet>
-
-      <section className="py-20 bg-[#121212]">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-[#1E1E1E] rounded-xl p-6 mb-8">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                <div>
-                  <h2 className="text-xl font-bold mb-2">Total Balance</h2>
-                  <div className="flex items-center">
-                    <span className="text-3xl font-bold font-heading mr-2">${totalBalanceUSD.toFixed(2)}</span>
-                    <span className="text-[#00D395] text-sm flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                      </svg>
-                      +12.5%
-                    </span>
-                  </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-1 bg-[#1E1E1E] border border-white border-opacity-5">
+          <CardHeader>
+            <CardTitle>User Wallet</CardTitle>
+            <CardDescription>Manage your personal wallet</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="bg-gradient-to-r from-[#0047AB] to-[#8A2BE2] p-0.5 rounded-xl">
+              <div className="bg-[#121212] p-6 rounded-[calc(0.75rem-1px)]">
+                <div className="text-sm text-gray-400 mb-1">Current Balance</div>
+                <div className="flex items-center">
+                  <DollarSign className="h-6 w-6 text-[#00FFD1] mr-2" />
+                  <span className="text-3xl font-bold">{balance}</span>
+                  <span className="ml-2 text-gray-400">SOL</span>
                 </div>
-                <div className="mt-4 md:mt-0">
-                  <p className="text-sm text-gray-400 mb-1">Solana Balance</p>
-                  <div className="flex items-center">
-                    <span className="font-mono text-[#00FFD1] text-lg">{demoUserWallet.solanaBalance} SOL</span>
-                    <span className="text-gray-400 ml-2">(${solanaValueUSD.toFixed(2)})</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <Button 
-                  onClick={() => setShowSendDialog(true)}
-                  className="bg-[#2A2A2A] hover:bg-[#1E1E1E] transition-colors"
-                >
-                  <span className="flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                    Send
-                  </span>
-                </Button>
-                <Button 
-                  className="bg-gradient-to-r from-[#0047AB] to-[#8A2BE2] hover:from-[#3373C4] hover:to-[#A45BF0]"
-                  onClick={() => alert("Your receive address: demo123.solana")}
-                >
-                  <span className="flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                    </svg>
-                    Receive
-                  </span>
-                </Button>
-              </div>
-
-              <div className="space-y-4">
-                {demoUserWallet.purchasedTokens.map((token) => (
-                  <div key={token.tokenId} className="p-4 bg-[#2A2A2A] rounded-lg flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#0047AB] to-[#8A2BE2] flex items-center justify-center mr-3">
-                        <span className="text-white font-medium">
-                          {demoCompanyToken?.symbol}
-                        </span>
-                      </div>
-                      <div>
-                        <h5 className="font-medium">{demoCompanyToken?.name}</h5>
-                        <span className="text-sm text-gray-400">{token.amount} tokens</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-mono">${token.currentValue.toFixed(2)}</div>
-                      <div className="text-sm text-gray-400">
-                        Purchase value: ${token.purchaseValue.toFixed(2)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                {demoUserWallet.purchasedTokens.length === 0 && (
-                  <div className="text-center py-8 text-gray-400">
-                    No tokens purchased yet
-                  </div>
-                )}
+                <div className="text-xs text-gray-500 mt-2">User ID: {userId}</div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {showSendDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-[#1E1E1E] p-6 rounded-lg w-96">
-            <h3 className="text-xl mb-4">Send Assets</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm text-gray-400">Select Asset</label>
-                <select 
-                  value={selectedToken}
-                  onChange={(e) => setSelectedToken(e.target.value)}
-                  className="w-full p-2 bg-[#2A2A2A] rounded mt-1 text-white"
-                >
-                  <option value="SOL">SOL</option>
-                  {demoUserWallet.purchasedTokens.map((token) => (
-                    <option key={token.tokenId} value={token.tokenId}>
-                      {demoCompanyToken?.symbol} ({token.amount} available)
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-sm text-gray-400">Recipient Address</label>
-                <input
-                  type="text"
-                  value={recipientAddress}
-                  onChange={(e) => setRecipientAddress(e.target.value)}
-                  className="w-full p-2 bg-[#2A2A2A] rounded mt-1"
-                  placeholder="Enter recipient address"
+            <form onSubmit={handleSendTransaction} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="recipientId">Recipient ID</Label>
+                <Input
+                  id="recipientId"
+                  placeholder="Enter recipient ID"
+                  value={recipientId}
+                  onChange={(e) => setRecipientId(e.target.value)}
+                  required
                 />
               </div>
-              <div>
-                <label className="text-sm text-gray-400">
-                  Amount ({selectedToken === "SOL" ? "SOL" : demoCompanyToken?.symbol})
-                </label>
-                <input
+
+              <div className="space-y-2">
+                <Label htmlFor="amount">Amount (SOL)</Label>
+                <Input
+                  id="amount"
                   type="number"
-                  value={sendAmount}
-                  onChange={(e) => setSendAmount(e.target.value)}
-                  className="w-full p-2 bg-[#2A2A2A] rounded mt-1"
-                  placeholder="Enter amount"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  required
                 />
-                <p className="text-sm text-gray-400 mt-1">
-                  Available: {selectedToken === "SOL" 
-                    ? `${demoUserWallet.solanaBalance} SOL`
-                    : `${demoUserWallet.purchasedTokens.find(t => t.tokenId === selectedToken)?.amount || 0} ${demoCompanyToken?.symbol}`
-                  }
-                </p>
               </div>
-              <div className="flex gap-2">
-                <Button onClick={handleSend} className="flex-1">
-                  Send
-                </Button>
-                <Button onClick={() => setShowSendDialog(false)} variant="outline" className="flex-1">
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
+
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-[#0047AB] to-[#8A2BE2]"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <ArrowUpRight className="mr-2 h-4 w-4" />
+                    Send SOL
+                  </>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2 bg-[#1E1E1E] border border-white border-opacity-5">
+          <CardHeader>
+            <CardTitle>Transaction History</CardTitle>
+            <CardDescription>Recent activity in your wallet</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="all">
+              <TabsList className="mb-4">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="incoming">Incoming</TabsTrigger>
+                <TabsTrigger value="outgoing">Outgoing</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="all" className="space-y-4">
+                {transactions.length > 0 ? (
+                  transactions.map((tx) => (
+                    <div
+                      key={tx.id}
+                      className="flex items-center p-3 rounded-lg bg-[#121212] border border-white border-opacity-5"
+                    >
+                      {tx.toWalletId === userId ? (
+                        <div className="h-10 w-10 rounded-full bg-green-500 bg-opacity-20 flex items-center justify-center mr-3">
+                          <ArrowDownLeft className="h-5 w-5 text-green-500" />
+                        </div>
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-red-500 bg-opacity-20 flex items-center justify-center mr-3">
+                          <ArrowUpRight className="h-5 w-5 text-red-500" />
+                        </div>
+                      )}
+
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <div className="font-medium">
+                            {tx.toWalletId === userId ? "Received" : "Sent"} {tx.amount} {tx.tokenId}
+                          </div>
+                          <div className={tx.toWalletId === userId ? "text-green-500" : "text-red-500"}>
+                            {tx.toWalletId === userId ? "+" : "-"}
+                            {tx.amount}
+                          </div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-400">
+                          <div>{tx.toWalletId === userId ? `From: ${tx.fromWalletId}` : `To: ${tx.toWalletId}`}</div>
+                          <div>{formatDate(tx.timestamp)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-400">No transactions found</div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="incoming" className="space-y-4">
+                {transactions.filter((tx) => tx.toWalletId === userId).length > 0 ? (
+                  transactions
+                    .filter((tx) => tx.toWalletId === userId)
+                    .map((tx) => (
+                      <div
+                        key={tx.id}
+                        className="flex items-center p-3 rounded-lg bg-[#121212] border border-white border-opacity-5"
+                      >
+                        <div className="h-10 w-10 rounded-full bg-green-500 bg-opacity-20 flex items-center justify-center mr-3">
+                          <ArrowDownLeft className="h-5 w-5 text-green-500" />
+                        </div>
+
+                        <div className="flex-1">
+                          <div className="flex justify-between">
+                            <div className="font-medium">
+                              Received {tx.amount} {tx.tokenId}
+                            </div>
+                            <div className="text-green-500">+{tx.amount}</div>
+                          </div>
+                          <div className="flex justify-between text-xs text-gray-400">
+                            <div>From: {tx.fromWalletId}</div>
+                            <div>{formatDate(tx.timestamp)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                ) : (
+                  <div className="text-center py-8 text-gray-400">No incoming transactions found</div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="outgoing" className="space-y-4">
+                {transactions.filter((tx) => tx.fromWalletId === userId).length > 0 ? (
+                  transactions
+                    .filter((tx) => tx.fromWalletId === userId)
+                    .map((tx) => (
+                      <div
+                        key={tx.id}
+                        className="flex items-center p-3 rounded-lg bg-[#121212] border border-white border-opacity-5"
+                      >
+                        <div className="h-10 w-10 rounded-full bg-red-500 bg-opacity-20 flex items-center justify-center mr-3">
+                          <ArrowUpRight className="h-5 w-5 text-red-500" />
+                        </div>
+
+                        <div className="flex-1">
+                          <div className="flex justify-between">
+                            <div className="font-medium">
+                              Sent {tx.amount} {tx.tokenId}
+                            </div>
+                            <div className="text-red-500">-{tx.amount}</div>
+                          </div>
+                          <div className="flex justify-between text-xs text-gray-400">
+                            <div>To: {tx.toWalletId}</div>
+                            <div>{formatDate(tx.timestamp)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                ) : (
+                  <div className="text-center py-8 text-gray-400">No outgoing transactions found</div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+          <CardFooter className="flex justify-center">
+            <Button variant="outline" disabled={isLoading}>
+              {isLoading ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Refresh
+                </>
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
+  )
 }
