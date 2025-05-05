@@ -1,121 +1,159 @@
-import { Token } from "@/types/tokens";
-import { useLanguage } from "@/hooks/useLanguage";
-import { useState } from 'react';
-import { useDemo } from "@/context/DemoContext";
-import { Button } from "@/components/ui/button";
+"use client"
+
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { formatCurrency } from "@/lib/utils"
+import { useDemo } from "@/context/DemoContext"
+import type { Token } from "@/context/DemoContext" // Import the Token type
 
 interface TokenCardProps {
-  token: Token;
+  token: Token
 }
 
 const TokenCard = ({ token }: TokenCardProps) => {
-  const { t } = useLanguage();
-  const { isDemoMode, demoUserType, purchaseToken, demoUserWallet } = useDemo(); // Assumed useDemo hook
-  const [purchaseAmount, setPurchaseAmount] = useState("");
-  const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
+  const { purchaseToken, demoUserWallet } = useDemo()
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [amount, setAmount] = useState(1)
+  const [error, setError] = useState("")
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value)
+    if (isNaN(value) || value < 1) {
+      setAmount(1)
+    } else {
+      setAmount(value)
+    }
+  }
 
   const handlePurchase = () => {
-    const amount = Number(purchaseAmount);
-    if (amount > 0) {
-      const totalCost = amount * token.currentPrice;
-      if (totalCost <= demoUserWallet.solanaBalance) {
-        purchaseToken(token.id, amount);
-        setShowPurchaseDialog(false);
-        setPurchaseAmount("");
-      }
-    }
-  };
+    const totalCost = token.currentPrice * amount
 
-  const sectorLabel = t(`tokens.sectors.${token.sector}`);
+    if (totalCost > demoUserWallet.balance) {
+      setError("Saldo insufficiente per completare l'acquisto")
+      return
+    }
+
+    purchaseToken(token.id, amount)
+    setIsDialogOpen(false)
+    setAmount(1)
+    setError("")
+  }
+
+  // Calculate progress percentage
+  const progressPercentage = (token.raisedAmount / token.targetRaise) * 100
 
   return (
-    <div className="token-card bg-[#2A2A2A] rounded-xl overflow-hidden border border-white border-opacity-5 hover:border-[#00FFD1] hover:border-opacity-30 transition-all duration-300">
-      <div className="h-40 bg-gradient-to-r from-[#0047AB] to-[#8A2BE2] relative">
-        <div className="absolute inset-0 bg-opacity-50 flex items-center justify-center">
-          <img src={token.imageUrl} alt={token.name} className="w-full h-full object-cover opacity-60" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#121212] to-transparent"></div>
-        </div>
-        <div className="absolute bottom-0 left-0 p-4">
-          <span className="bg-[#00FFD1] bg-opacity-90 text-[#121212] px-2 py-1 rounded text-xs font-medium">
-            {sectorLabel}
-          </span>
-        </div>
-      </div>
-
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-heading font-bold text-xl">{token.name}</h3>
-          <div className="flex items-center bg-[#0047AB] bg-opacity-20 px-2 py-1 rounded">
-            <span className="text-[#3373C4] font-mono text-sm font-medium">{token.symbol}</span>
-          </div>
-        </div>
-
-        <p className="text-gray-400 text-sm mb-6">
-          {token.description}
-        </p>
-
-        <div className="flex items-center justify-between text-sm mb-6">
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
           <div>
-            <span className="text-gray-400 block">{t("tokens.card.marketcap")}</span>
-            <span className="font-medium font-mono">{token.marketCap}</span>
+            <CardTitle>{token.name}</CardTitle>
+            <CardDescription>{token.symbol}</CardDescription>
           </div>
-          <div>
-            <span className="text-gray-400 block">{t("tokens.card.supply")}</span>
-            <span className="font-medium font-mono">{token.supply}</span>
+          <Badge variant={token.type === "equity" ? "default" : token.type === "debt" ? "secondary" : "outline"}>
+            {token.type === "equity" ? "Equity" : token.type === "debt" ? "Debt" : "Utility"}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-grow">
+        <div className="aspect-video bg-gray-200 rounded-md mb-4 overflow-hidden">
+          <img src={token.image || "/placeholder.svg"} alt={token.name} className="w-full h-full object-cover" />
+        </div>
+        <p className="text-sm mb-4 line-clamp-3">{token.description}</p>
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Prezzo</span>
+            <span className="font-medium">{formatCurrency(token.currentPrice)}</span>
           </div>
-          <div>
-            <span className="text-gray-400 block">{t("tokens.card.price")}</span>
-            <span className="font-medium font-mono">{token.price}</span>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Emittente</span>
+            <span className="font-medium">{token.issuer}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Offerta Totale</span>
+            <span className="font-medium">{token.totalSupply.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Investimento Min.</span>
+            <span className="font-medium">{formatCurrency(token.minInvestment)}</span>
           </div>
         </div>
 
-        <div className="flex space-x-2">
-          <a 
-            href={`#token-detail-${token.id}`} 
-            className="flex-1 px-4 py-2 bg-[#121212] text-center text-white rounded hover:bg-[#1E1E1E] transition-colors"
-          >
-            {t("tokens.card.details")}
-          </a>
-          {/* Button changed to open the purchase dialog */}
-          <Button
-            onClick={() => setShowPurchaseDialog(true)}
-            className="flex-1 px-4 py-2 bg-gradient-to-r from-[#00FFD1] to-[#8A2BE2] hover:from-[#3373C4] hover:to-[#A45BF0] text-center text-white rounded transition-all"
-          >
-            {t("tokens.card.buy")}
-          </Button>
-
-          {showPurchaseDialog && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-[#1E1E1E] p-6 rounded-lg w-96">
-                <h3 className="text-xl mb-4">Purchase {token.name}</h3>
-                <div className="mb-4">
-                  <p className="text-sm text-gray-400 mb-2">Your balance: {demoUserWallet.solanaBalance} SOL</p>
-                  <input
-                    type="number"
-                    value={purchaseAmount}
-                    onChange={(e) => setPurchaseAmount(e.target.value)}
-                    className="w-full p-2 bg-[#2A2A2A] rounded"
-                    placeholder="Amount to purchase"
-                  />
-                  <p className="text-sm text-gray-400 mt-2">
-                    Cost: {(Number(purchaseAmount) * token.currentPrice).toFixed(2)} SOL
-                  </p>
+        <div className="mt-4">
+          <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+            <div
+              className="bg-primary h-2 rounded-full"
+              style={{ width: `${progressPercentage > 100 ? 100 : progressPercentage}%` }}
+            ></div>
+          </div>
+          <div className="flex justify-between text-xs mt-1">
+            <span>{formatCurrency(token.raisedAmount)} raccolti</span>
+            <span>{((token.raisedAmount / token.targetRaise) * 100).toFixed(0)}%</span>
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="w-full">Acquista Token</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Acquista {token.name}</DialogTitle>
+              <DialogDescription>
+                Inserisci la quantità di token che desideri acquistare. Il prezzo attuale è{" "}
+                {formatCurrency(token.currentPrice)} per token.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Saldo disponibile:</span>
+                  <span className="font-medium">{formatCurrency(demoUserWallet.balance)}</span>
                 </div>
-                <div className="flex gap-2">
-                  <Button onClick={handlePurchase} className="flex-1"> {/* Assumed Button component */}
-                    Confirm
-                  </Button>
-                  <Button onClick={() => setShowPurchaseDialog(false)} variant="outline" className="flex-1"> {/* Assumed Button component */}
-                    Cancel
-                  </Button>
+                <div className="flex justify-between">
+                  <span>Prezzo per token:</span>
+                  <span className="font-medium">{formatCurrency(token.currentPrice)}</span>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
 
-export default TokenCard;
+              <div className="space-y-1">
+                <label htmlFor="amount" className="text-sm font-medium">
+                  Quantità
+                </label>
+                <Input
+                  id="amount"
+                  type="number"
+                  min="1"
+                  value={amount}
+                  onChange={handleAmountChange}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="flex justify-between font-medium">
+                <span>Costo totale:</span>
+                <span>{formatCurrency(token.currentPrice * amount)}</span>
+              </div>
+
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Annulla
+              </Button>
+              <Button onClick={handlePurchase}>Conferma Acquisto</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardFooter>
+    </Card>
+  )
+}
+
+export default TokenCard
+

@@ -1,165 +1,281 @@
+"use client"
 
-import { useLanguage } from "@/hooks/useLanguage";
-import { useDemo } from "@/context/DemoContext";
-import { Helmet } from "react-helmet";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
-import { Chart } from "@/components/ui/chart";
-import { Input } from "@/components/ui/input";
+import { useState } from "react"
+import { useDemo } from "@/context/DemoContext"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { formatCurrency } from "@/lib/utils"
+import type { Token } from "@/context/DemoContext" // Import the Token type
 
-export default function BusinessWalletDemo() {
-  const { t } = useLanguage();
-  const { demoCompanyToken, demoUserWallet } = useDemo();
-  const [showBuyDialog, setShowBuyDialog] = useState(false);
-  const [buyAmount, setBuyAmount] = useState("");
+const BusinessWalletDemo = () => {
+  const { demoUserWallet } = useDemo()
+  const [activeTab, setActiveTab] = useState("overview")
 
-  const SOLANA_PRICE_USD = 102.45;
-  const solanaValueUSD = demoUserWallet.solanaBalance * SOLANA_PRICE_USD;
-  const TRANSACTION_FEE_PERCENTAGE = 0.5; // 0.5% fee
-  const accumulatedFees = {
-    solana: 0.25, // Example accumulated fees
-    tokens: 100
-  };
+  // Mock data for business wallet
+  const businessBalance = 25000
+  const tokensSold = 5000
+  const totalRaised = 250000
 
-  // Calculate token distribution
-  const totalSupply = demoCompanyToken?.totalSupply || 0;
-  const circulatingSupply = totalSupply * 0.85; // Example: 85% in circulation
-  const companyHoldings = totalSupply - circulatingSupply;
+  // Import tokens from data
+  const tokens = require('../../data/tokens').default
 
-  const chartData = {
-    labels: ['Company Holdings', 'Circulating Supply'],
-    datasets: [{
-      data: [companyHoldings, circulatingSupply],
-      backgroundColor: ['#0047AB', '#8A2BE2']
-    }]
-  };
+  // Mock company token
+  const companyToken: Token = {
+    id: "company-token",
+    name: "Company Token",
+    symbol: "COMP",
+    description: "Your company's security token",
+    issuer: "Your Company",
+    totalSupply: 10000,
+    currentPrice: 50,
+    image: "/placeholder.svg?height=200&width=200",
+    status: "active",
+    type: "equity",
+    startDate: "2023-01-01",
+    endDate: "2023-12-31",
+    minInvestment: 500,
+    targetRaise: 500000,
+    raisedAmount: 250000
+  }
 
-  const handleCollectFees = () => {
-    // In a real implementation, this would interact with the blockchain
-    alert(`Collected fees: ${accumulatedFees.solana} SOL and ${accumulatedFees.tokens} ${demoCompanyToken?.symbol}`);
-  };
-
-  const handleBuyToken = () => {
-    const amount = Number(buyAmount);
-    if (amount > 0) {
-      // In a real implementation, this would interact with the blockchain
-      alert(`Bought ${amount} ${demoCompanyToken?.symbol} tokens`);
-      setShowBuyDialog(false);
-      setBuyAmount("");
+  // Mock investors
+  const investors = [
+    {
+      id: 1,
+      name: "Investor 1",
+      amount: 2000,
+      value: 100000,
+      date: "2023-03-15"
+    },
+    {
+      id: 2,
+      name: "Investor 2",
+      amount: 1500,
+      value: 75000,
+      date: "2023-04-10"
+    },
+    {
+      id: 3,
+      name: "Investor 3",
+      amount: 1000,
+      value: 50000,
+      date: "2023-05-22"
+    },
+    {
+      id: 4,
+      name: "Investor 4",
+      amount: 500,
+      value: 25000,
+      date: "2023-06-05"
     }
-  };
+  ]
 
   return (
-    <>
-      <Helmet>
-        <title>Business Wallet - Prime Genesis</title>
-        <meta name="description" content="Manage your business tokens with Prime Genesis" />
-      </Helmet>
+    <div className="container mx-auto py-8 px-4">
+      <h1 className="text-3xl font-bold mb-6">Dashboard Aziendale</h1>
 
-      <section className="py-20 bg-[#121212]">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-[#1E1E1E] rounded-xl p-6 mb-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <h2 className="text-xl font-bold mb-2">{demoCompanyToken?.name}</h2>
-                  <p className="text-gray-400">{demoCompanyToken?.symbol}</p>
-                  <div className="mt-4">
-                    <div className="font-mono text-xl">${demoCompanyToken?.currentValue}</div>
-                    <div className="text-sm text-gray-400">
-                      Market Cap: ${demoCompanyToken?.marketCap.toLocaleString()}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Saldo Disponibile</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{formatCurrency(businessBalance)}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Token Venduti</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{tokensSold.toLocaleString()}</p>
+            <p className="text-sm text-muted-foreground">
+              {((tokensSold / companyToken.totalSupply) * 100).toFixed(1)}% del totale
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Capitale Raccolto</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{formatCurrency(totalRaised)}</p>
+            <p className="text-sm text-muted-foreground">
+              {((totalRaised / companyToken.targetRaise) * 100).toFixed(1)}% dell'obiettivo
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Panoramica</TabsTrigger>
+          <TabsTrigger value="token">Il Tuo Token</TabsTrigger>
+          <TabsTrigger value="investors">Investitori</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Riepilogo Raccolta</CardTitle>
+              <CardDescription>Stato attuale della tua raccolta di capitale</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700">
+                  <div
+                    className="bg-primary h-4 rounded-full"
+                    style={{ width: `${(totalRaised / companyToken.targetRaise) * 100}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>{formatCurrency(totalRaised)} raccolti</span>
+                  <span>{formatCurrency(companyToken.targetRaise)} obiettivo</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  <div>
+                    <h3 className="text-lg font-medium mb-4">Statistiche Token</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Prezzo Attuale</span>
+                        <span className="font-medium">{formatCurrency(companyToken.currentPrice)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Offerta Totale</span>
+                        <span className="font-medium">{companyToken.totalSupply.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Token Venduti</span>
+                        <span className="font-medium">{tokensSold.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Token Rimanenti</span>
+                        <span className="font-medium">{(companyToken.totalSupply - tokensSold).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-medium mb-4">Dettagli Raccolta</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Data Inizio</span>
+                        <span className="font-medium">{new Date(companyToken.startDate).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Data Fine</span>
+                        <span className="font-medium">{new Date(companyToken.endDate).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Investimento Minimo</span>
+                        <span className="font-medium">{formatCurrency(companyToken.minInvestment)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Numero Investitori</span>
+                        <span className="font-medium">{investors.length}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold mb-2">Solana Balance</h2>
-                  <div className="font-mono text-xl">{demoUserWallet.solanaBalance} SOL</div>
-                  <div className="text-sm text-gray-400">
-                    ${solanaValueUSD.toFixed(2)} USD
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="token" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Il Tuo Token</CardTitle>
+              <CardDescription>Dettagli del token emesso dalla tua azienda</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="md:w-1/3">
+                  <div className="w-full aspect-square bg-gray-200 rounded-lg overflow-hidden mb-4">
+                    <img
+                      src={companyToken.image || "/placeholder.svg"}
+                      alt={companyToken.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <Badge className="mb-2" variant={companyToken.type === "equity" ? "default" : "secondary"}>
+                    {companyToken.type === "equity" ? "Equity Token" : "Debt Token"}
+                  </Badge>
+                  <Badge variant={companyToken.status === "active" ? "outline" : "secondary"}>
+                    {companyToken.status === "active" ? "Attivo" : "Completato"}
+                  </Badge>
+                </div>
+
+                <div className="md:w-2/3">
+                  <h2 className="text-2xl font-bold mb-2">{companyToken.name}</h2>
+                  <p className="text-muted-foreground mb-4">{companyToken.symbol}</p>
+                  <p className="mb-6">{companyToken.description}</p>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Prezzo Attuale</p>
+                      <p className="text-xl font-medium">{formatCurrency(companyToken.currentPrice)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Offerta Totale</p>
+                      <p className="text-xl font-medium">{companyToken.totalSupply.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Capitale Target</p>
+                      <p className="text-xl font-medium">{formatCurrency(companyToken.targetRaise)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Capitale Raccolto</p>
+                      <p className="text-xl font-medium">{formatCurrency(companyToken.raisedAmount)}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <Button className="w-full">Modifica Token</Button>
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="bg-[#2A2A2A] p-4 rounded-lg">
-                  <h3 className="text-lg font-medium mb-2">Token Supply</h3>
-                  <p className="text-2xl font-mono">{demoCompanyToken?.totalSupply.toLocaleString()}</p>
-                </div>
-                <div className="bg-[#2A2A2A] p-4 rounded-lg">
-                  <h3 className="text-lg font-medium mb-2">Token Holders</h3>
-                  <p className="text-2xl font-mono">{demoCompanyToken?.holders.toLocaleString()}</p>
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <h3 className="text-lg font-medium mb-4">Token Distribution</h3>
-                <div className="bg-[#2A2A2A] p-4 rounded-lg" style={{ height: '300px' }}>
-                  <Chart type="pie" data={chartData} />
-                </div>
-              </div>
-
-              <div className="bg-[#2A2A2A] p-4 rounded-lg mb-6">
-                <h3 className="text-lg font-medium mb-2">Transaction Fees</h3>
-                <p className="text-sm text-gray-400 mb-2">Fee Rate: {TRANSACTION_FEE_PERCENTAGE}%</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-400">Accumulated SOL</p>
-                    <p className="font-mono">{accumulatedFees.solana} SOL</p>
+        <TabsContent value="investors" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Investitori</CardTitle>
+              <CardDescription>Elenco degli investitori nel tuo token</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {investors.map((investor) => (
+                  <div key={investor.id} className="flex justify-between items-center border-b pb-3">
+                    <div>
+                      <p className="font-medium">{investor.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(investor.date).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">{formatCurrency(investor.value)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {investor.amount} {companyToken.symbol}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Accumulated Tokens</p>
-                    <p className="font-mono">{accumulatedFees.tokens} {demoCompanyToken?.symbol}</p>
-                  </div>
-                </div>
+                ))}
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <Button 
-                  onClick={handleCollectFees}
-                  className="bg-gradient-to-r from-[#0047AB] to-[#8A2BE2]"
-                >
-                  Collect Fees
-                </Button>
-                <Button 
-                  onClick={() => setShowBuyDialog(true)}
-                  className="bg-[#2A2A2A]"
-                >
-                  Buy Token
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {showBuyDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-[#1E1E1E] p-6 rounded-lg w-96">
-            <h3 className="text-xl mb-4">Buy {demoCompanyToken?.symbol} Tokens</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm text-gray-400">Amount</label>
-                <Input
-                  type="number"
-                  value={buyAmount}
-                  onChange={(e) => setBuyAmount(e.target.value)}
-                  className="w-full"
-                  placeholder="Enter amount"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={handleBuyToken} className="flex-1">
-                  Buy
-                </Button>
-                <Button onClick={() => setShowBuyDialog(false)} variant="outline" className="flex-1">
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
 }
+
+export default BusinessWalletDemo
+

@@ -1,44 +1,97 @@
+import type { Token } from "@/context/DemoContext" // Import the Token type
 
-import { Token } from "../types/tokens";
-
-export const demoTokens: Token[] = [
+// Define tokens with the Token type
+const tokens: Token[] = [
   {
-    id: "crave-coffee-token",
-    name: "Crave Coffee Token",
-    symbol: "CCT",
-    description: "Loyalty and payment token for Crave Coffee chain stores. Earn tokens with purchases and redeem for beverages and merchandise.",
-    sector: "hospitality",
-    marketCap: "$1.2M",
-    supply: "10M CCT",
-    price: "$0.12",
-    currentPrice: 0.12,
-    imageUrl: "https://images.unsplash.com/photo-1577962917302-cd874c4e31d2"
+    id: "token1",
+    name: "Real Estate Fund",
+    symbol: "REF",
+    description:
+      "Un token che rappresenta quote di un fondo immobiliare diversificato con proprietà in tutta Italia. Offre rendimenti stabili e potenziale di crescita del capitale.",
+    issuer: "Italian Properties Group",
+    totalSupply: 100000,
+    currentPrice: 50, // Add this property
+    image: "/placeholder.svg?height=200&width=200",
+    status: "active",
+    type: "equity",
+    startDate: "2023-01-01",
+    endDate: "2023-12-31",
+    minInvestment: 500,
+    targetRaise: 5000000,
+    raisedAmount: 2500000,
   },
   {
-    id: "technova-token",
-    name: "TechNova Token",
-    symbol: "TNT",
-    description: "Utility token for TechNova cloud services and AI solutions. Provides discounts on services and access to exclusive features.",
-    sector: "technology",
-    marketCap: "$8.7M",
-    supply: "25M TNT",
-    price: "$0.35",
-    currentPrice: 0.35,
-    imageUrl: "https://images.unsplash.com/photo-1603190287605-e6ade32fa852"
-  }
-];
-
-export const officialTokens: Token[] = [
+    id: "token2",
+    name: "Green Energy Bond",
+    symbol: "GEB",
+    description:
+      "Un token di debito che finanzia progetti di energia rinnovabile in Italia. Offre un tasso di interesse fisso del 5% con pagamenti trimestrali.",
+    issuer: "Energia Verde SpA",
+    totalSupply: 50000,
+    currentPrice: 100, // Add this property
+    image: "/placeholder.svg?height=200&width=200",
+    status: "active",
+    type: "debt",
+    startDate: "2023-02-15",
+    endDate: "2024-02-15",
+    minInvestment: 1000,
+    targetRaise: 5000000,
+    raisedAmount: 3750000,
+  },
   {
-    id: "health-plus-token",
-    name: "Health Plus Token",
-    symbol: "HPT",
-    description: "Healthcare rewards token for medical service providers. Earn tokens through health checkups and redeem for medical services.",
-    sector: "health",
-    marketCap: "$5.0M",
-    supply: "15M HPT",
-    price: "$0.33",
-    currentPrice: 0.33,
-    imageUrl: "https://images.unsplash.com/photo-1584982751601-97dcc096659c"
-  }
-];
+    id: "token3",
+    name: "Tech Startup Equity",
+    symbol: "TSE",
+    description:
+      "Un token che rappresenta azioni in una promettente startup tecnologica italiana specializzata in soluzioni di intelligenza artificiale per il settore sanitario.",
+    issuer: "HealthTech Innovations",
+    totalSupply: 20000,
+    currentPrice: 250, // Add this property
+    image: "/placeholder.svg?height=200&width=200",
+    status: "active",
+    type: "equity",
+    startDate: "2023-03-10",
+    endDate: "2023-09-10",
+    minInvestment: 2500,
+    targetRaise: 5000000,
+    raisedAmount: 1250000,
+  },
+  {
+    id: "token4",
+    name: "Luxury Brand Token",
+    symbol: "LBT",
+    description:
+      "Un token utility che offre vantaggi esclusivi, sconti e accesso anticipato ai prodotti di un rinomato marchio di lusso italiano.",
+    issuer: "Milano Luxury Group",
+    totalSupply: 10000,
+    currentPrice: 500,
+    image: "/placeholder.svg?height=200&width=200",
+    status: "active",
+    type: "utility",
+    startDate: "2023-04-01",
+    endDate: "2023-10-01",
+    minInvestment: 500,
+    targetRaise: 5000000,
+    raisedAmount: 4000000,
+  },
+  {
+    id: "token5",
+    name: "Infrastructure Project",
+    symbol: "IPT",
+    description:
+      "Un token di debito che finanzia un importante progetto infrastrutturale in Italia. Offre un rendimento del 6% annuo con una durata di 5 anni.",
+    issuer: "Infrastrutture Italiane SpA",
+    totalSupply: 200000,
+    currentPrice: 100,
+    image: "/placeholder.svg?height=200&width=200",
+    status: "active",
+    type: "debt",
+    startDate: "2023-05-15",
+    endDate: "2023-11-15",
+    minInvestment: 1000,
+    targetRaise: 20000000,
+    raisedAmount: 15000000,
+  },
+]
+
+export default tokens

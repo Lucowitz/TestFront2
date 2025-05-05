@@ -1,37 +1,40 @@
+"use client"
 
-import { Switch, Route, useLocation } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { useEffect } from "react";
-import Demo from "@/pages/Demo";
-import NotFound from "@/pages/not-found";
-import Home from "@/pages/Home";
-import TokenExplorer from "@/pages/TokenExplorer";
-import Wallet from "@/pages/Wallet";
-import Compliance from "@/pages/Compliance";
-import About from "@/pages/About";
-import Services from "@/pages/Services";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import { ThemeWrapper } from "@/components/ui/theme-wrapper";
-import { LanguageProvider } from "./context/LanguageContext";
-import { DemoProvider, useDemo } from "./context/DemoContext";
-import AuthPage from "./pages/AuthPage";
+import { Switch, Route, useLocation } from "wouter"
+import { queryClient } from "./lib/queryClient"
+import { QueryClientProvider } from "@tanstack/react-query"
+import { Toaster } from "@/components/ui/toaster"
+import { useEffect } from "react"
+import Demo from "@/pages/Demo"
+import NotFound from "@/pages/not-found"
+import Home from "@/pages/Home"
+import TokenExplorer from "@/pages/TokenExplorer"
+import Wallet from "@/pages/Wallet"
+import Compliance from "@/pages/Compliance"
+import About from "@/pages/About"
+import Services from "@/pages/Services"
+import Header from "@/components/layout/Header"
+import Footer from "@/components/layout/Footer"
+import { ThemeWrapper } from "@/components/ui/theme-wrapper"
+import { LanguageProvider } from "./context/LanguageContext"
+import { DemoProvider, useDemo } from "./context/DemoContext"
+import { AuthProvider } from "./context/AuthContext"
+import AuthPage from "./pages/AuthPage"
+import UserSettings from "./pages/UserSettings"
 
 // This component will handle scrolling to top on navigation
 function ScrollToTop() {
-  const [location] = useLocation();
-  
+  const [location] = useLocation()
+
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location]);
-  
-  return null;
+    window.scrollTo(0, 0)
+  }, [location])
+
+  return null
 }
 
 function AppRoutes() {
-  const { isDemoMode, demoUserType } = useDemo();
+  const { isDemoMode, demoUserType } = useDemo()
 
   return (
     <Switch>
@@ -43,8 +46,9 @@ function AppRoutes() {
       <Route path="/services" component={Services} />
       <Route path="/demo" component={Demo} />
       <Route path="/auth-page" component={AuthPage} />
+      <Route path="/settings" component={UserSettings} />
       {isDemoMode ? (
-        demoUserType === 'company' ? (
+        demoUserType === "company" ? (
           <Route component={Wallet} />
         ) : (
           <Route component={TokenExplorer} />
@@ -53,29 +57,31 @@ function AppRoutes() {
         <Route component={NotFound} />
       )}
     </Switch>
-  );
+  )
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
-        <DemoProvider>
-          <ThemeWrapper>
-            <div className="flex flex-col min-h-screen">
-              <Header />
-              <main className="flex-grow pt-16 md:pt-20">
-                <ScrollToTop />
-                <AppRoutes />
-              </main>
-              <Footer />
-            </div>
-            <Toaster />
-          </ThemeWrapper>
-        </DemoProvider>
+        <AuthProvider>
+          <DemoProvider>
+            <ThemeWrapper>
+              <div className="flex flex-col min-h-screen">
+                <Header />
+                <main className="flex-grow pt-16 md:pt-20">
+                  <ScrollToTop />
+                  <AppRoutes />
+                </main>
+                <Footer />
+              </div>
+              <Toaster />
+            </ThemeWrapper>
+          </DemoProvider>
+        </AuthProvider>
       </LanguageProvider>
     </QueryClientProvider>
-  );
+  )
 }
 
-export default App;
+export default App
