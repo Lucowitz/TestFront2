@@ -1,6 +1,6 @@
-import type { Token } from "@/context/DemoContext" // Import the Token type
+import type { Token } from "@/context/DemoContext"
 
-// Define tokens with the Token type
+// Your single `tokens` array, unchanged
 const tokens: Token[] = [
   {
     id: "token1",
@@ -10,7 +10,7 @@ const tokens: Token[] = [
       "Un token che rappresenta quote di un fondo immobiliare diversificato con proprietà in tutta Italia. Offre rendimenti stabili e potenziale di crescita del capitale.",
     issuer: "Italian Properties Group",
     totalSupply: 100000,
-    currentPrice: 50, // Add this property
+    currentPrice: 50,
     image: "/placeholder.svg?height=200&width=200",
     status: "active",
     type: "equity",
@@ -28,7 +28,7 @@ const tokens: Token[] = [
       "Un token di debito che finanzia progetti di energia rinnovabile in Italia. Offre un tasso di interesse fisso del 5% con pagamenti trimestrali.",
     issuer: "Energia Verde SpA",
     totalSupply: 50000,
-    currentPrice: 100, // Add this property
+    currentPrice: 100,
     image: "/placeholder.svg?height=200&width=200",
     status: "active",
     type: "debt",
@@ -46,7 +46,7 @@ const tokens: Token[] = [
       "Un token che rappresenta azioni in una promettente startup tecnologica italiana specializzata in soluzioni di intelligenza artificiale per il settore sanitario.",
     issuer: "HealthTech Innovations",
     totalSupply: 20000,
-    currentPrice: 250, // Add this property
+    currentPrice: 250,
     image: "/placeholder.svg?height=200&width=200",
     status: "active",
     type: "equity",
@@ -94,4 +94,11 @@ const tokens: Token[] = [
   },
 ]
 
+// **Named exports** so all your
+// `import { demoTokens, officialTokens } from "@/data/tokens"`
+// lines continue to work unchanged:
+export const demoTokens = tokens
+export const officialTokens = tokens
+
+// Keep the default export if you use it elsewhere:
 export default tokens

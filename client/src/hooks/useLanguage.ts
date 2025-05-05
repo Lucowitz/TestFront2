@@ -1,31 +1,31 @@
 "use client"
 
-// Rename this file to avoid conflict with the existing useLanguage
-// This is a placeholder implementation - you should integrate with your actual language system
-
 import { useState, useEffect } from "react"
 
 // Define available languages
 type Language = "it" | "en"
 
-// Define a custom hook for language management
-export const useLanguageHook = () => {
+/**
+ * Named export `useLanguage` so all your existing
+ * `import { useLanguage } from "@/hooks/useLanguage";`
+ * lines continue to work without change.
+ */
+export function useLanguage() {
   const [language, setLanguage] = useState<Language>("it")
 
-  // Load language preference from localStorage on mount
+  // Load saved preference
   useEffect(() => {
-    const storedLanguage = localStorage.getItem("language") as Language
-    if (storedLanguage && (storedLanguage === "it" || storedLanguage === "en")) {
-      setLanguage(storedLanguage)
+    const stored = localStorage.getItem("language") as Language | null
+    if (stored === "it" || stored === "en") {
+      setLanguage(stored)
     }
   }, [])
 
-  // Save language preference to localStorage when it changes
+  // Save on change
   useEffect(() => {
     localStorage.setItem("language", language)
   }, [language])
 
-  // Function to change language
   const changeLanguage = (newLanguage: Language) => {
     setLanguage(newLanguage)
   }
@@ -37,3 +37,6 @@ export const useLanguageHook = () => {
     isEnglish: language === "en",
   }
 }
+
+// Optional default export (won’t break anything)
+export default useLanguage
