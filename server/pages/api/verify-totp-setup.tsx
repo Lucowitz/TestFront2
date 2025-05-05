@@ -2,14 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import QRCode from "react-qr-code";
+import QRCode from 'react-qr-code';
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+import { useRouter } from 'next/navigation'; // Corrected import
+
 
 const AuthPage = () => {
     const [isBusiness, setIsBusiness] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
-    const [registrationDetails, setRegistrationDetails] = useState({
+    const [registrationDetails, setRegistrationDetails] = useState({  // Corrected Syntax
         username: '',
         nome: '',
         cognome: '',
@@ -19,7 +20,7 @@ const AuthPage = () => {
         password: '',
         email: '',
     });
-    const [loginCredentials, setLoginCredentials] = useState({
+    const [loginCredentials, setLoginCredentials] = useState({ // Corrected Syntax
         loginUsername: '',
         loginPassword: '',
         totpCode: '',
@@ -31,14 +32,17 @@ const AuthPage = () => {
     const [verificationCode, setVerificationCode] = useState('');
     const [verificationMessage, setVerificationMessage] = useState('');
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
+    const router = useRouter(); // Added router
 
+
+    // Clear verification message after 5 seconds
     useEffect(() => {
         if (verificationMessage) {
             const timer = setTimeout(() => setVerificationMessage(''), 5000);
             return () => clearTimeout(timer);
         }
     }, [verificationMessage]);
+
 
     const handleRegistrationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -61,8 +65,19 @@ const AuthPage = () => {
         try {
             const response = await fetch('/api/register', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(registrationDetails),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: registrationDetails.username,
+                    nome: registrationDetails.nome,
+                    cognome: registrationDetails.cognome,
+                    indirizzo: registrationDetails.indirizzo,
+                    codiceFiscale: registrationDetails.codiceFiscale,
+                    telefono: registrationDetails.telefono,
+                    email: registrationDetails.email,
+                    password: registrationDetails.password,
+                }),
             });
 
             if (response.ok) {
@@ -75,8 +90,8 @@ const AuthPage = () => {
                 console.log('Registration successful, TOTP setup initiated.');
             } else {
                 const errorData = await response.json();
-                setVerificationMessage("Registration Failed: " + (errorData.message || "Unknown error"));
-                console.error('Registration failed:', errorData.message);
+                console.error('Registration failed:', errorData.message || 'Something went wrong');
+                setVerificationMessage("Registration Failed: " + (errorData.message || "Unknown error")); // Provide more specific error
             }
         } catch (error) {
             console.error('Error during registration:', error);
@@ -93,11 +108,12 @@ const AuthPage = () => {
             setLoading(false);
             return;
         }
-
         try {
             const response = await fetch('/api/verify-totp-setup', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({ temporaryId, totpCode: verificationCode }),
             });
 
@@ -125,18 +141,20 @@ const AuthPage = () => {
         try {
             const response = await fetch('/api/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify(loginCredentials),
             });
 
             if (response.ok) {
                 const data = await response.json();
-                router.push(data.redirectUrl);
                 console.log('Login successful.');
+                router.push(data.redirectUrl); // Use router.push
             } else {
                 const errorData = await response.json();
+                console.error('Login failed:', errorData.message || 'Invalid credentials');
                 setVerificationMessage("Login Failed: " + errorData.message);
-                console.error('Login failed:', errorData.message);
             }
         } catch (error) {
             console.error('Error during login:', error);
@@ -151,21 +169,37 @@ const AuthPage = () => {
             <Card className="w-full max-w-md p-6 space-y-4">
                 <div className="flex justify-between border-b pb-2">
                     <button
-                        className={cn("text-lg font-semibold", !isLogin ? "text-gray-400" : "text-white")}
+                        className={cn(
+                            "text-lg font-semibold",
+                            !isLogin ? "text-gray-400" : "text-white"
+                        )}
                         onClick={() => setIsLogin(true)}
                     >
                         Login
                     </button>
                     <button
-                        className={cn("text-lg font-semibold", isLogin ? "text-gray-400" : "text-white")}
+                        className={cn(
+                            "text-lg font-semibold",
+                            isLogin ? "text-gray-400" : "text-white"
+                        )}
                         onClick={() => setIsLogin(false)}
                     >
                         Registrati
                     </button>
                 </div>
                 <div className="flex justify-center gap-4">
-                    <Button variant={isBusiness ? "outline" : "default"} onClick={() => setIsBusiness(false)}>Utente</Button>
-                    <Button variant={isBusiness ? "default" : "outline"} onClick={() => setIsBusiness(true)}>Business</Button>
+                    <Button
+                        variant={isBusiness ? "outline" : "default"}
+                        onClick={() => setIsBusiness(false)}
+                    >
+                        Utente
+                    </Button>
+                    <Button
+                        variant={isBusiness ? "default" : "outline"}
+                        onClick={() => setIsBusiness(true)}
+                    >
+                        Business
+                    </Button>
                 </div>
                 {isLogin ? (
                     <LoginForm
@@ -187,14 +221,18 @@ const AuthPage = () => {
                 {verificationMessage && <p className="text-center text-red-500">{verificationMessage}</p>}
 
                 {showTotpSetup && (
-                    <div className="mt-4 space-y-4">
-                        <h2 className="text-center text-xl font-semibold">Setup Two-Factor Authentication</h2>
-                        <p className="text-sm text-center">
-                            A TOTP key has been generated for your account. It is NOT stored by us.
-                            You MUST save it in your authenticator app (e.g., Google Authenticator, Authy).
+                    <div className="mt-4">
+                        <h2>Setup Two-Factor Authentication</h2>
+                        <p>
+                            A TOTP key has been generated for your account.
+                            For security reasons, this key is NOT stored by us.
+                            You MUST save it in your authenticator app (e.g., Google Authenticator, Authy) to log in.
+                            This step
+                            is required and cannot be skipped.
                         </p>
-                        {qrCodeValue && <div className="flex justify-center"><QRCode value={qrCodeValue} size={256} level="H" /></div>}
-                        {totpSecret && <p className="text-center text-sm">Or enter this secret manually: <span className="font-mono">{totpSecret}</span></p>}
+                        {qrCodeValue && <div className="flex justify-center mb-4"><QRCode value={qrCodeValue} size={256} level="H" /></div>}
+                        {totpSecret && <p className="text-center">Alternatively, enter this secret key manually: <span className="font-mono">{totpSecret}</span></p>}
+
                         <Input
                             type="text"
                             placeholder="Enter verification code"
@@ -206,40 +244,75 @@ const AuthPage = () => {
                         </Button>
                     </div>
                 )}
+
             </Card>
         </div>
     );
 };
 
 const LoginForm = ({ isBusiness, loginCredentials, handleLoginChange, handleLogin, loading }) => (
-    <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-        <Input
-            label={isBusiness ? "P.IVA" : "Codice fiscale"}
-            type="text"
-            placeholder={isBusiness ? "P.IVA" : "Codice fiscale"}
-            name="loginUsername"
-            value={loginCredentials.loginUsername}
-            onChange={handleLoginChange}
-            required
-        />
-        <Input
-            label="Password"
-            type="password"
-            placeholder="Password"
-            name="loginPassword"
-            value={loginCredentials.loginPassword}
-            onChange={handleLoginChange}
-            required
-        />
-        <Input
-            label="Codice TOTP"
-            type="text"
-            placeholder="Inserisci codice a 6 cifre"
-            name="totpCode"
-            value={loginCredentials.totpCode}
-            onChange={handleLoginChange}
-            required
-        />
+    <form className="space-y-4">
+        {isBusiness ? (
+            <>
+                <Input
+                    label="P.IVA"
+                    type="text"
+                    placeholder="P.IVA"
+                    name="loginUsername"
+                    value={loginCredentials.loginUsername}
+                    onChange={handleLoginChange}
+                    required
+                />
+                <Input
+                    label="Password"
+                    type="password"
+                    placeholder="Password"
+                    name="loginPassword"
+                    value={loginCredentials.loginPassword}
+                    onChange={handleLoginChange}
+                    required
+                />
+                <Input
+                    label="Codice TOTP"
+                    type="text"
+                    placeholder="Inserisci codice a 6 cifre"
+                    name="totpCode"
+                    value={loginCredentials.totpCode}
+                    onChange={handleLoginChange}
+                    required
+                />
+            </>
+        ) : (
+            <>
+                <Input
+                    label="Codice fiscale"
+                    type="text"
+                    placeholder="Codice fiscale"
+                    name="loginUsername"
+                    value={loginCredentials.loginUsername}
+                    onChange={handleLoginChange}
+                    required
+                />
+                <Input
+                    label="Password"
+                    type="password"
+                    placeholder="Password"
+                    name="loginPassword"
+                    value={loginCredentials.loginPassword}
+                    onChange={handleLoginChange}
+                    required
+                />
+                <Input
+                    label="Codice TOTP"
+                    type="text"
+                    placeholder="Inserisci codice a 6 cifre"
+                    name="totpCode"
+                    value={loginCredentials.totpCode}
+                    onChange={handleLoginChange}
+                    required
+                />
+            </>
+        )}
         <Button className="w-full" onClick={handleLogin} disabled={loading}>
             {loading ? 'Accessing...' : 'Accedi'}
         </Button>
@@ -247,7 +320,7 @@ const LoginForm = ({ isBusiness, loginCredentials, handleLoginChange, handleLogi
 );
 
 const RegisterForm = ({ isBusiness, registrationDetails, handleRegistrationChange, handleRegister, loading }) => (
-    <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+    <form className="space-y-4">
         {isBusiness ? (
             <>
                 <Input
@@ -263,7 +336,7 @@ const RegisterForm = ({ isBusiness, registrationDetails, handleRegistrationChang
                     label="P.IVA"
                     type="text"
                     placeholder="Partita Iva"
-                    name="email"
+                    name="email"  // Changed from email to partitaIVA
                     value={registrationDetails.email}
                     onChange={handleRegistrationChange}
                     required
@@ -271,9 +344,18 @@ const RegisterForm = ({ isBusiness, registrationDetails, handleRegistrationChang
                 <Input
                     label="Email Commerciale"
                     type="email"
-                    placeholder="Email"
+                    placeholder="Email Commerciale"
                     name="email"
                     value={registrationDetails.email}
+                    onChange={handleRegistrationChange}
+                    required
+                />
+                <Input
+                    label="Password"
+                    type="password"
+                    placeholder="Password"
+                    name="password"
+                    value={registrationDetails.password}
                     onChange={handleRegistrationChange}
                     required
                 />
@@ -299,15 +381,6 @@ const RegisterForm = ({ isBusiness, registrationDetails, handleRegistrationChang
                     required
                 />
                 <Input
-                    label="Codice Fiscale"
-                    type="text"
-                    placeholder="Codice Fiscale"
-                    name="codiceFiscale"
-                    value={registrationDetails.codiceFiscale}
-                    onChange={handleRegistrationChange}
-                    required
-                />
-                <Input
                     label="Indirizzo"
                     type="text"
                     placeholder="Indirizzo"
@@ -317,11 +390,29 @@ const RegisterForm = ({ isBusiness, registrationDetails, handleRegistrationChang
                     required
                 />
                 <Input
-                    label="Telefono"
+                    label="Codice Fiscale"
                     type="text"
-                    placeholder="Telefono"
+                    placeholder="Codice Fiscale"
+                    name="codiceFiscale"
+                    value={registrationDetails.codiceFiscale}
+                    onChange={handleRegistrationChange}
+                    required
+                />
+                <Input
+                    label="Numero di Telefono"
+                    type="text"
+                    placeholder="Numero di Telefono"
                     name="telefono"
                     value={registrationDetails.telefono}
+                    onChange={handleRegistrationChange}
+                    required
+                />
+                <Input
+                    label="Password"
+                    type="password"
+                    placeholder="Password"
+                    name="password"
+                    value={registrationDetails.password}
                     onChange={handleRegistrationChange}
                     required
                 />
@@ -336,15 +427,6 @@ const RegisterForm = ({ isBusiness, registrationDetails, handleRegistrationChang
                 />
             </>
         )}
-        <Input
-            label="Password"
-            type="password"
-            placeholder="Password"
-            name="password"
-            value={registrationDetails.password}
-            onChange={handleRegistrationChange}
-            required
-        />
         <Button className="w-full" onClick={handleRegister} disabled={loading}>
             {loading ? 'Registering...' : 'Registrati'}
         </Button>

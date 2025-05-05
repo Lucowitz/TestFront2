@@ -29,5 +29,11 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      external: ['qrcode.react'],
+    },
+  },
+  optimizeDeps: {
+    include: ['qrcode.react'],
   },
 });
